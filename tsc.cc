@@ -77,22 +77,8 @@ private:
 };
 
 
-///////////////////////////////////////////////////////////
-//
-//////////////////////////////////////////////////////////
 int Client::connectTo()
 {
-  // ------------------------------------------------------------
-  // In this function, you are supposed to create a stub so that
-  // you call service methods in the processCommand/porcessTimeline
-  // functions. That is, the stub should be accessible when you want
-  // to call any service methods in those functions.
-  // Please refer to gRpc tutorial how to create a stub.
-  // ------------------------------------------------------------
-    
-///////////////////////////////////////////////////////////
-// YOUR CODE HERE
-//////////////////////////////////////////////////////////
     stub_ = SNSService::NewStub(grpc::CreateChannel(hostname+":"+port,grpc::InsecureChannelCredentials()));
 
     IReply loginreply = Login();
@@ -106,51 +92,6 @@ int Client::connectTo()
 
 IReply Client::processCommand(std::string& input)
 {
-  // ------------------------------------------------------------
-  // GUIDE 1:
-  // In this function, you are supposed to parse the given input
-  // command and create your own message so that you call an 
-  // appropriate service method. The input command will be one
-  // of the followings:
-  //
-  // FOLLOW <username>
-  // UNFOLLOW <username>
-  // LIST
-  // TIMELINE
-  // ------------------------------------------------------------
-  
-  // ------------------------------------------------------------
-  // GUIDE 2:
-  // Then, you should create a variable of IReply structure
-  // provided by the client.h and initialize it according to
-  // the result. Finally you can finish this function by returning
-  // the IReply.
-  // ------------------------------------------------------------
-  
-  
-  // ------------------------------------------------------------
-  // HINT: How to set the IReply?
-  // Suppose you have "FOLLOW" service method for FOLLOW command,
-  // IReply can be set as follow:
-  // 
-  //     // some codes for creating/initializing parameters for
-  //     // service method
-  //     IReply ire;
-  //     grpc::Status status = stub_->FOLLOW(&context, /* some parameters */);
-  //     ire.grpc_status = status;
-  //     if (status.ok()) {
-  //         ire.comm_status = SUCCESS;
-  //     } else {
-  //         ire.comm_status = FAILURE_NOT_EXISTS;
-  //     }
-  //      
-  //      return ire;
-  // 
-  // IMPORTANT: 
-  // For the command "LIST", you should set both "all_users" and 
-  // "following_users" member variable of IReply.
-  // ------------------------------------------------------------
-
 
     std::istringstream iss(input);
 
@@ -197,11 +138,15 @@ IReply Client::List() {
     ListReply list_reply;
 
     list_request.set_username(username);
+    // Make RPC call LIST()
     Status list_status = stub_->List(&context, list_request, &list_reply);
     ire.grpc_status = list_status;
+
+    // Create vector of strings with all usernames
     std::vector<std::string> all_users_list(list_reply.all_users().begin(), list_reply.all_users().end());
     ire.all_users = all_users_list;
 
+    // Create vector of strings with followers usernames
     std::vector<std::string> followers_list(list_reply.followers().begin(), list_reply.followers().end());
     ire.followers = followers_list;
 
@@ -218,12 +163,16 @@ IReply Client::Follow(const std::string& username2) {
     follow_request.set_username(username);
     follow_request.add_arguments(username2);
     Reply follow_reply;
+    // Make RPC call FOLLOW()
     Status follow_status = stub_->Follow(&context, follow_request, &follow_reply);
     ire.grpc_status = follow_status;
+
     if(follow_status.ok()){
+      //If second user name ie username2 is invalid set IStatus
       if(follow_reply.msg() == "Invalid Username2"){
         ire.comm_status = IStatus::FAILURE_INVALID_USERNAME;
       } else if(follow_reply.msg() == "Already Exists"){
+        //If user2 is already follower of user1
         ire.comm_status = IStatus::FAILURE_ALREADY_EXISTS;
         
       }
@@ -235,10 +184,6 @@ IReply Client::Follow(const std::string& username2) {
       ire.comm_status = IStatus::FAILURE_UNKNOWN;
     }
       
-    /***
-    YOUR CODE HERE
-    ***/
-
     return ire;
 }
 
@@ -247,22 +192,21 @@ IReply Client::UnFollow(const std::string& username2) {
 
     IReply ire;
 
-    /***
-    YOUR CODE HERE
-    ***/
     ClientContext context;
     Request unfollow_request;
     unfollow_request.set_username(username);
     unfollow_request.add_arguments(username2);
     Reply unfollow_reply;
+
+    // Make RPC call UnFollow() and send username1 and username2
     Status status = stub_->UnFollow(&context, unfollow_request, &unfollow_reply);
     ire.grpc_status = status;
 
     if(unfollow_reply.msg() == "Invalid Username2"){
-      ire.comm_status = IStatus::FAILURE_INVALID_USERNAME;
-    }
+      ire.comm_status = IStatus::FAILURE_INVALID_USERNAME;  // if user2 is invalid
+    } 
     else if(unfollow_reply.msg() == "Not a follower"){
-      ire.comm_status = IStatus::FAILURE_NOT_A_FOLLOWER;
+      ire.comm_status = IStatus::FAILURE_NOT_A_FOLLOWER; // if user2 is not a follower of user1
     }
     else{
       ire.comm_status = IStatus::SUCCESS;
@@ -275,14 +219,12 @@ IReply Client::UnFollow(const std::string& username2) {
 IReply Client::Login() {
 
     IReply ire;
-  
-    /***
-     YOUR CODE HERE
-    ***/
     ClientContext context;
     Request login_request;
     login_request.set_username(this->username);
     Reply login_reply;
+
+    //Make RPC Login() to register new user
     Status login_status = stub_->Login(&context, login_request, &login_reply);
     ire.grpc_status = login_status;
 
@@ -303,29 +245,16 @@ IReply Client::Login() {
 
 // Timeline Command
 void Client::Timeline(const std::string& username) {
-
-    // ------------------------------------------------------------
-    // In this function, you are supposed to get into timeline mode.
-    // You may need to call a service method to communicate with
-    // the server. Use getPostMessage/displayPostMessage functions 
-    // in client.cc file for both getting and displaying messages 
-    // in timeline mode.
-    // ------------------------------------------------------------
-
-    // ------------------------------------------------------------
-    // IMPORTANT NOTICE:
-    //
-    // Once a user enter to timeline mode , there is no way
-    // to command mode. You don't have to worry about this situation,
-    // and you can terminate the client program by pressing
-    // CTRL-C (SIGINT)
-    // ------------------------------------------------------------
   
     ClientContext context;
+    // Create a stream for bidirectional RPC
     shared_ptr<ClientReaderWriter<Message, Message> > stream(stub_->Timeline(&context));
     Message init_msg;
+    // Send dummy message to help the server store the stream on its end
     init_msg.set_username(username);
     stream->Write(init_msg);
+
+    // Create a child thread to delegate writing and sending of messages to server
     thread writer([stream, &username](){
       while(1){
         string getPost = getPostMessage();
@@ -337,6 +266,7 @@ void Client::Timeline(const std::string& username) {
     });
     Message server_message;
 
+    // In parent thread, we continue with the task of reading messages from server if any
     while(1){
       stream->Read(&server_message);
       google::protobuf::Timestamp timestamp = server_message.timestamp();
@@ -350,10 +280,9 @@ void Client::Timeline(const std::string& username) {
       time_t posttime = std::chrono::duration_cast<std::chrono::seconds>(totalDuration).count();
       displayPostMessage(server_message.username(),server_message.msg(), posttime);
     }
-              cout<<"out4writer\n";
 
+    // Wait for child thread and continue
     writer.join();
-              cout<<"out5writer\n";
 
     Status status = stream->Finish();
     if (!status.ok()) {

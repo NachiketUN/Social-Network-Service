@@ -84,6 +84,8 @@ struct Client
   }
 };
 
+
+// Structure to read "posts" from the files corresponding to each client
 struct Post
 {
   char type;
@@ -102,6 +104,8 @@ class SNSServiceImpl final : public SNSService::Service
   {
     std::string username = request->username();
     Client *client = nullptr;
+
+    // Find all the clients in client_db and add them to user list
     for (Client *iter : client_db)
     {
       list_reply->add_all_users(iter->username);
@@ -110,6 +114,7 @@ class SNSServiceImpl final : public SNSService::Service
         client = iter;
       }
     }
+    // Find all the followers of current client and add them to followers list
     for (Client *iter : client->client_followers)
     {
       if(iter->username == request->username()) continue; 
@@ -124,11 +129,14 @@ class SNSServiceImpl final : public SNSService::Service
     const google::protobuf::RepeatedPtrField<std::string> &argument_list = request->arguments();
     std::string username2 = argument_list[0];
 
+    // If both usernames match, it means the client is trying to follow itself
     if(username1 == username2){
       reply->set_msg("Already Exists");
       return Status::OK;
     }
     Client *user1 = nullptr, *user2 = nullptr;
+
+    // Find user1 and user2 from client_db based on username
     for (Client *client : client_db)
     {
       if (user1 && user2)
@@ -147,17 +155,19 @@ class SNSServiceImpl final : public SNSService::Service
 
     if (!user2)
     {
-      reply->set_msg("Invalid Username2");
+      reply->set_msg("Invalid Username2"); // If user2 was not found in client_db, it is invalid
       return Status::OK;
     }
-    else
+    else // Both user1 and user2 are found from client_db
     {
+       
       if (std::find(user1->client_following.begin(), user1->client_following.end(), user2) != user1->client_following.end())
       {
-        reply->set_msg("Already Exists");
+        reply->set_msg("Already Exists"); // User1 already follows user2
       }
       else
       {
+        // Add user2 in following list of user1
         user1->client_following.push_back(user2);
         user2->client_followers.push_back(user1);
       }
@@ -170,11 +180,14 @@ class SNSServiceImpl final : public SNSService::Service
 
     std::string username1 = request->username();
     std::string username2 = request->arguments()[0];
+    // Client can't unfollow itself, so if username1 matches username2 it is considered invalid
     if(username1 == username2){
       reply->set_msg("Invalid Username2");
       return Status::OK;
     }
     Client *user1 = nullptr, *user2 = nullptr;
+
+    // Find user1 and user2 from client_db
     for (Client *client : client_db)
     {
       if (user1 && user2)
@@ -193,13 +206,15 @@ class SNSServiceImpl final : public SNSService::Service
 
     if (!user2)
     {
-      reply->set_msg("Invalid Username2");
+      reply->set_msg("Invalid Username2"); //User2 not found in client_db
       return Status::OK;
     }
     else
     {
       vector<Client *>::iterator it1 = user1->client_following.begin();
       vector<Client *>::iterator it2 = user2->client_followers.begin();
+
+      // Find position of user2 in user1's following list
       while (it1 != user1->client_following.end())
       {
         if (*it1 == user2)
@@ -207,18 +222,19 @@ class SNSServiceImpl final : public SNSService::Service
         it1++;
       }
       if(it1 == user1->client_following.end()){
-        reply->set_msg("Not a follower");
+        reply->set_msg("Not a follower"); // If the user2 is not found in following list of user1
         return Status::OK;
       }
-      user1->client_following.erase(it1);
-
+      user1->client_following.erase(it1); //Remove user2 from following list of user1
+      
+      // Find position of user1 in user2's follower list
       while (it2 != user2->client_followers.end())
       {
         if (*it2 == user1)
           break;
         it2++;
       }
-      user2->client_followers.erase(it2);
+      user2->client_followers.erase(it2); //Remove user1 from follower list of user2
       return Status::OK;
     }
 
@@ -231,6 +247,8 @@ class SNSServiceImpl final : public SNSService::Service
   {
 
     bool is_new_user = true;
+
+    //Check if username is alreay registered
     for (const Client *client : client_db)
     {
       if (client->username == request->username())
@@ -239,14 +257,14 @@ class SNSServiceImpl final : public SNSService::Service
         break;
       }
     }
-    if (is_new_user)
+    if (is_new_user) // Register new User
     {
       Client *new_login_client = new Client;
       new_login_client->username = request->username();
       new_login_client->client_followers.push_back(new_login_client);
       if (std::filesystem::exists(request->username() + ".txt"))
-      {
-        new_login_client->following_file_size = 1;
+      { // If user file exists, set its corresponding size to non zero, used to detect older messages from users file
+        new_login_client->following_file_size = 1; 
       }
       client_db.push_back(new_login_client);
       reply->set_msg("Login Success");
@@ -264,15 +282,16 @@ class SNSServiceImpl final : public SNSService::Service
   {
 
     Message client_message;
+    // Loop to read messages from client
     while (stream->Read(&client_message))
     {
-      if (!client_message.has_timestamp())
-      {
+      if (!client_message.has_timestamp()) 
+      { // Dummy first message detected, capture the client stream and store it in struct Client
         string username = client_message.username();
         Client *client = *find_if(client_db.begin(), client_db.end(), [&username](Client *cl)
                                   { return cl->username == username; });
         client->stream = stream;
-        if (client->following_file_size)
+        if (client->following_file_size) // User file already exists, send 20 latest posts from file
         {
           std::ifstream file(client->username + ".txt");
           cout << "reading file";
@@ -285,7 +304,8 @@ class SNSServiceImpl final : public SNSService::Service
             int n = 20;
             std::vector<Post> posts;
             std::string line;
-            while (n > 0 && std::getline(file, line))
+            // Read all the posts from file
+            while (std::getline(file, line))
             {
               Post post;
               int line_no = 0;
@@ -314,17 +334,16 @@ class SNSServiceImpl final : public SNSService::Service
               }
               if (line_no == 3)
                 posts.push_back(post);
-              n--;
             }
-            cout<<posts.size()<<endl;
-            for (auto post : posts)
+
+            //Send the latest 20 posts to client
+            for (auto post = posts.rbegin(); post != posts.rend(); ++post)
             {
-              client_message.set_msg(post.content);
+              client_message.set_msg(post->content);
               google::protobuf::Timestamp *timestamp = new google::protobuf::Timestamp();
               struct tm tm_time;
-              if (strptime(post.date.c_str(), "%Y-%m-%d %H:%M:%S", &tm_time) == nullptr)
+              if (strptime(post->date.c_str(), "%Y-%m-%d %H:%M:%S", &tm_time) == nullptr)
               {
-                cout << post.date << endl;
                 std::cout << "Error parsing datetime string." << std::endl;
               }
 
@@ -334,12 +353,14 @@ class SNSServiceImpl final : public SNSService::Service
               timestamp->set_nanos(0);
               client_message.set_allocated_timestamp(timestamp);
               stream->Write(client_message);
+              n--;
+              if (n == 0) break;
             }
           }
           file.close();
         }
       }
-      else
+      else // Incase when the client sends a genuine message(not a dummy one)
       {
         string username = client_message.username();
         char buffer[20];
@@ -350,12 +371,14 @@ class SNSServiceImpl final : public SNSService::Service
         string post_time(buffer);
         std::string postContent = "T " + post_time + "\nU " + client_message.username() + "\nW " + client_message.msg() + "\n";
 
+        // Find client from client_db
         Client *client = *find_if(client_db.begin(), client_db.end(), [&username](Client *cl)
                                   { return cl->username == username; });
         client->stream = stream;
         client->following_file_size = 1;
         auto follower_list = client->client_followers;
 
+        //Writer thread to write messages to clients followers and corresponding files
         thread writer([&follower_list, &postContent, &client_message]()
                       {
             for(Client* follower: follower_list){
