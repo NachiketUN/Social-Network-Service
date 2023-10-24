@@ -53,12 +53,19 @@
   google::FlushLogFiles(google::severity);
 
 #include "sns.grpc.pb.h"
+#include "coordinator.grpc.pb.h"
 
+using grpc::ClientContext;
 using csce438::ListReply;
 using csce438::Message;
 using csce438::Reply;
 using csce438::Request;
+using csce438::ServerInfo;
+using csce438::Confirmation;
+using csce438::Request;
 using csce438::SNSService;
+using csce438::CoordService;
+
 using google::protobuf::Duration;
 using google::protobuf::Timestamp;
 using grpc::Server;
@@ -70,6 +77,17 @@ using grpc::ServerWriter;
 using grpc::Status;
 using namespace std;
 
+
+void sendHeartbeat();
+struct Coordinator{
+    int clusterId;
+    std::string hostname;
+    std::string port;
+    int serverID;
+    std::string serverport;
+};
+
+Coordinator CoordinatorDetails;
 struct Client
 {
   std::string username;
@@ -96,6 +114,7 @@ struct Post
 
 // Vector that stores every client that has been created
 std::vector<Client *> client_db;
+std::unique_ptr<CoordService::Stub> stub_;
 
 class SNSServiceImpl final : public SNSService::Service
 {
@@ -414,7 +433,43 @@ void RunServer(std::string port_no)
   std::cout << "Server listening on " << server_address << std::endl;
   log(INFO, "Server listening on " + server_address);
 
+  stub_ = CoordService::NewStub(grpc::CreateChannel(CoordinatorDetails.hostname+":"+CoordinatorDetails.port,grpc::InsecureChannelCredentials()));
+
+  ClientContext context;
+  ServerInfo registerServerInfo;
+  Confirmation registerConfirmation;
+  registerServerInfo.set_serverid(CoordinatorDetails.serverID);
+  registerServerInfo.set_hostname(CoordinatorDetails.hostname);
+  registerServerInfo.set_port(CoordinatorDetails.serverport);
+  registerServerInfo.set_cluster(CoordinatorDetails.clusterId);
+
+  Status status = stub_->RegisterServer(&context, registerServerInfo, &registerConfirmation);
+  std::thread hb(sendHeartbeat);
+
   server->Wait();
+}
+void sendHeartbeat(){
+    while(true){
+      ClientContext context;
+      ServerInfo serverInfo;
+      Confirmation heartbeatConfirmation;
+      serverInfo.set_serverid(CoordinatorDetails.serverID);
+      serverInfo.set_hostname(CoordinatorDetails.hostname);
+      serverInfo.set_port(CoordinatorDetails.serverport);
+      serverInfo.set_cluster(CoordinatorDetails.clusterId);
+
+      Status status = stub_->Heartbeat(&context, serverInfo, &heartbeatConfirmation);
+      if(heartbeatConfirmation.status()){
+        log(INFO, "Successfully sent heartbeat to coordinator");
+        cout<<"Successfully sent heartbeat to server Coordinator"<<endl;
+      }
+      else{
+        log(INFO, "Heartbeat RPC Unsuccessfull, will try in 5 secs again");
+        cout<<"Not available";
+
+      }
+      sleep(5);
+    }
 }
 
 int main(int argc, char **argv)
@@ -423,13 +478,27 @@ int main(int argc, char **argv)
   std::string port = "3010";
 
   int opt = 0;
-  while ((opt = getopt(argc, argv, "p:")) != -1)
+  while ((opt = getopt(argc, argv, "c:s:h:k:p:")) != -1)
   {
     switch (opt)
     {
-    case 'p':
-      port = optarg;
+      case 'c':
+      CoordinatorDetails.clusterId = stoi(optarg);
       break;
+      case 's':
+      CoordinatorDetails.serverID = stoi(optarg);
+      break;
+      case 'h':
+      CoordinatorDetails.hostname = optarg;
+      break;
+      case 'k':
+      CoordinatorDetails.port = optarg;
+      break;
+
+      case 'p':
+        port = optarg;
+        CoordinatorDetails.serverport = port;
+        break;
     default:
       std::cerr << "Invalid Command Line Argument\n";
     }

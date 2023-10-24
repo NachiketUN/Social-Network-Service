@@ -14,7 +14,7 @@
 
 #include "client.h"
 
-
+#include "coordinator.grpc.pb.h"
 #include "sns.grpc.pb.h"
 using grpc::Channel;
 using grpc::ClientContext;
@@ -26,7 +26,12 @@ using csce438::Message;
 using csce438::ListReply;
 using csce438::Request;
 using csce438::Reply;
+using csce438::ServerInfo;
+using csce438::Confirmation;
+using csce438::Request;
+using csce438::ID;
 using csce438::SNSService;
+using csce438::CoordService;
 using namespace std;
 
 void sig_ignore(int sig) {
@@ -68,7 +73,8 @@ private:
   // You can have an instance of the client stub
   // as a member variable.
   std::unique_ptr<SNSService::Stub> stub_;
-  
+  std::unique_ptr<CoordService::Stub> coordstub_;
+
   IReply Login();
   IReply List();
   IReply Follow(const std::string &username);
@@ -79,8 +85,28 @@ private:
 
 int Client::connectTo()
 {
-    stub_ = SNSService::NewStub(grpc::CreateChannel(hostname+":"+port,grpc::InsecureChannelCredentials()));
-
+    coordstub_ = CoordService::NewStub(grpc::CreateChannel(hostname+":"+port,grpc::InsecureChannelCredentials()));
+    ID clientid;
+    clientid.set_id(std::stoi(username));
+    string serverhost = "", serverport ="";
+    while(true){
+      ClientContext context;
+      ServerInfo serverInfo;
+      Status status = coordstub_->GetServer(&context, clientid, &serverInfo);
+      if(status.ok()){
+        serverhost = serverInfo.hostname();
+        serverport = serverInfo.port();
+        break;
+      }
+      else{
+        std::cout << "gRPC call failed with status code: " << status.error_code()
+                  << " - " << status.error_message() << std::endl;
+      }
+      std::cout<<"Server is not up, will ping coordinator again"<<endl;
+      sleep(5);
+    }
+    
+    stub_ = SNSService::NewStub(grpc::CreateChannel(serverhost+":"+serverport,grpc::InsecureChannelCredentials()));
     IReply loginreply = Login();
 
     if(!loginreply.comm_status == IStatus::SUCCESS){
@@ -305,14 +331,15 @@ int main(int argc, char** argv) {
   std::string port = "3010";
     
   int opt = 0;
-  while ((opt = getopt(argc, argv, "h:u:p:")) != -1){
+  while ((opt = getopt(argc, argv, "h:k:u:")) != -1){
     switch(opt) {
     case 'h':
       hostname = optarg;break;
+    case 'k':
+    port = optarg;break;
+      
     case 'u':
       username = optarg;break;
-    case 'p':
-      port = optarg;break;
     default:
       std::cout << "Invalid Command Line Argument\n";
     }
