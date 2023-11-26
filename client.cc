@@ -11,13 +11,27 @@ void IClient::run()
   displayTitle();
   while (1) {
     std::string cmd = getCommand();
-    IReply reply = processCommand(cmd);
+    if(cmd == "TIMELINE"){
+      std::string checkcmd = "LIST";
+      IReply checkreply = processCommand(checkcmd);
+      if (checkreply.grpc_status.ok() && checkreply.comm_status == SUCCESS
+	&& cmd == "TIMELINE") {
+      //No need to do anything
+  }
+  else {
+  displayCommandReply(cmd, checkreply);
+  continue;
+  }
+    }
+
+  IReply reply = processCommand(cmd);
     displayCommandReply(cmd, reply);
     if (reply.grpc_status.ok() && reply.comm_status == SUCCESS
 	&& cmd == "TIMELINE") {
       std::cout << "Now you are in the timeline" << std::endl;
       processTimeline();
     }
+    
   }
 }
 

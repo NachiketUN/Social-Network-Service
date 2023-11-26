@@ -440,6 +440,7 @@ class Confirmation final :
 
   enum : int {
     kStatusFieldNumber = 1,
+    kIsMasterFieldNumber = 2,
   };
   // bool status = 1;
   void clear_status() ;
@@ -451,6 +452,16 @@ class Confirmation final :
   void _internal_set_status(bool value);
 
   public:
+  // bool is_master = 2;
+  void clear_is_master() ;
+  bool is_master() const;
+  void set_is_master(bool value);
+
+  private:
+  bool _internal_is_master() const;
+  void _internal_set_is_master(bool value);
+
+  public:
   // @@protoc_insertion_point(class_scope:csce438.Confirmation)
  private:
   class _Internal;
@@ -460,6 +471,7 @@ class Confirmation final :
   typedef void DestructorSkippable_;
   struct Impl_ {
     bool status_;
+    bool is_master_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -840,6 +852,26 @@ inline bool Confirmation::_internal_status() const {
 inline void Confirmation::_internal_set_status(bool value) {
   ;
   _impl_.status_ = value;
+}
+
+// bool is_master = 2;
+inline void Confirmation::clear_is_master() {
+  _impl_.is_master_ = false;
+}
+inline bool Confirmation::is_master() const {
+  // @@protoc_insertion_point(field_get:csce438.Confirmation.is_master)
+  return _internal_is_master();
+}
+inline void Confirmation::set_is_master(bool value) {
+  _internal_set_is_master(value);
+  // @@protoc_insertion_point(field_set:csce438.Confirmation.is_master)
+}
+inline bool Confirmation::_internal_is_master() const {
+  return _impl_.is_master_;
+}
+inline void Confirmation::_internal_set_is_master(bool value) {
+  ;
+  _impl_.is_master_ = value;
 }
 
 // -------------------------------------------------------------------

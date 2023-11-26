@@ -31,16 +31,26 @@ GRPC_CPP_PLUGIN = grpc_cpp_plugin
 GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
 PROTOS_PATH = .
 
-all: system-check tsc tsd coordinator 
+all: system-check tsc tsd coordinator synchronizer
 
-tsc: client.o coordinator.pb.o coordinator.grpc.pb.o sns.pb.o sns.grpc.pb.o tsc.o
+tsc: client.o coordinator.pb.o coordinator.grpc.pb.o sns.pb.o sns.grpc.pb.o tsc.o CSVUtils.o TimelinePostsUtils.o
 	$(CXX) $^ $(LDFLAGS) -g -o $@
 
-tsd: coordinator.pb.o coordinator.grpc.pb.o sns.pb.o sns.grpc.pb.o tsd.o
+tsd: coordinator.pb.o coordinator.grpc.pb.o sns.pb.o sns.grpc.pb.o tsd.o CSVUtils.o TimelinePostsUtils.o
 	$(CXX) $^ $(LDFLAGS) -g -o $@
 
-coordinator: coordinator.pb.o coordinator.grpc.pb.o coordinator.o
+coordinator: coordinator.pb.o coordinator.grpc.pb.o coordinator.o CSVUtils.o TimelinePostsUtils.o
 	$(CXX) $^ $(LDFLAGS) -g -o $@
+	
+synchronizer: coordinator.pb.o coordinator.grpc.pb.o synchronizer.pb.o synchronizer.grpc.pb.o synchronizer.o CSVUtils.o TimelinePostsUtils.o 
+	$(CXX) $^ $(LDFLAGS) -g -o $@
+
+# Add the rule to build CSVUtils.o
+CSVUtils.o: CSVUtils.cpp CSVUtils.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+TimelinePostsUtils.o: TimelinePostsUtils.cpp TimelinePostsUtils.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 .PRECIOUS: %.grpc.pb.cc
 %.grpc.pb.cc: %.proto
@@ -51,7 +61,7 @@ coordinator: coordinator.pb.o coordinator.grpc.pb.o coordinator.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.txt *.o *.pb.cc *.pb.h tsc tsd coordinator 
+	rm -f *.txt *.o *.pb.cc *.pb.h tsc tsd coordinator synchronizer
 
 
 # The following is to test your system and ensure a smoother experience.

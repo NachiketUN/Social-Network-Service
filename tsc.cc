@@ -7,13 +7,13 @@
 #include <csignal>
 #include <sstream>
 #include <thread>
-
-
+#include <iomanip>
+#include <filesystem>
 #include <grpc++/grpc++.h>
 #include <google/protobuf/util/time_util.h>
 
 #include "client.h"
-
+#include "TimelinePostsUtils.h"
 #include "coordinator.grpc.pb.h"
 #include "sns.grpc.pb.h"
 using grpc::Channel;
@@ -33,6 +33,7 @@ using csce438::ID;
 using csce438::SNSService;
 using csce438::CoordService;
 using namespace std;
+
 
 void sig_ignore(int sig) {
   std::cout << "\nSignal caught "<< sig<<endl;
@@ -108,7 +109,6 @@ int Client::connectTo()
     
     stub_ = SNSService::NewStub(grpc::CreateChannel(serverhost+":"+serverport,grpc::InsecureChannelCredentials()));
     IReply loginreply = Login();
-
     if(!loginreply.comm_status == IStatus::SUCCESS){
       return -1;
     }
@@ -290,6 +290,32 @@ void Client::Timeline(const std::string& username) {
          }   
       }
     });
+
+    thread sycnTL([&username](){
+      while(1){
+           sleep(5);
+           std::string filePath = "client_"+username+".txt";
+           
+           if (std::filesystem::exists(filePath)) {
+            vector<TimelinePosts> clientPosts;
+            readTimelinePosts(filePath, clientPosts);
+            bool writeNeeded = false;
+            for(auto &post: clientPosts){
+              if(post.clientProcessing == false){
+                std::tm tm;
+                std::istringstream iss(post.timestamp);
+                iss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+                std::time_t timeT = std::mktime(&tm);
+                displayPostMessage(post.username,post.content, timeT);
+                post.clientProcessing = true;
+                writeNeeded = true;
+              }
+            }
+            if(writeNeeded) writeTimelinePosts(filePath, clientPosts);            
+          }
+      }
+    });
+
     Message server_message;
 
     // In parent thread, we continue with the task of reading messages from server if any
@@ -301,9 +327,13 @@ void Client::Timeline(const std::string& username) {
 
       // Calculate the total duration in nanoseconds
       std::chrono::nanoseconds totalDuration = seconds + nanos;
+      //New Code check if timeline file has changed and display those messages on terminal 
 
       // Convert the duration to std::time_t
       time_t posttime = std::chrono::duration_cast<std::chrono::seconds>(totalDuration).count();
+      if(server_message.msg().empty()){
+        cout<<"Connection Failed\n";
+      }else
       displayPostMessage(server_message.username(),server_message.msg(), posttime);
     }
 
@@ -324,7 +354,7 @@ void Client::Timeline(const std::string& username) {
 /////////////////////////////////////////////
 int main(int argc, char** argv) {
   signal(SIGINT, sig_ignore);
-
+  cout<<"hello here\n";
 
   std::string hostname = "localhost";
   std::string username = "default";

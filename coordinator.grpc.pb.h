@@ -55,12 +55,26 @@ class CoordService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::ServerInfo>> PrepareAsyncGetServer(::grpc::ClientContext* context, const ::csce438::ID& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::ServerInfo>>(PrepareAsyncGetServerRaw(context, request, cq));
     }
+    virtual ::grpc::Status GetFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ID& request, ::csce438::ServerInfo* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::ServerInfo>> AsyncGetFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ID& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::ServerInfo>>(AsyncGetFollowerSyncerRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::ServerInfo>> PrepareAsyncGetFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ID& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::ServerInfo>>(PrepareAsyncGetFollowerSyncerRaw(context, request, cq));
+    }
     virtual ::grpc::Status RegisterServer(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::csce438::Confirmation* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::Confirmation>> AsyncRegisterServer(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::Confirmation>>(AsyncRegisterServerRaw(context, request, cq));
     }
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::Confirmation>> PrepareAsyncRegisterServer(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::Confirmation>>(PrepareAsyncRegisterServerRaw(context, request, cq));
+    }
+    virtual ::grpc::Status RegisterFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::csce438::Confirmation* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::Confirmation>> AsyncRegisterFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::Confirmation>>(AsyncRegisterFollowerSyncerRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::Confirmation>> PrepareAsyncRegisterFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::csce438::Confirmation>>(PrepareAsyncRegisterFollowerSyncerRaw(context, request, cq));
     }
     class async_interface {
      public:
@@ -69,8 +83,12 @@ class CoordService final {
       virtual void Heartbeat(::grpc::ClientContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void GetServer(::grpc::ClientContext* context, const ::csce438::ID* request, ::csce438::ServerInfo* response, std::function<void(::grpc::Status)>) = 0;
       virtual void GetServer(::grpc::ClientContext* context, const ::csce438::ID* request, ::csce438::ServerInfo* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void GetFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ID* request, ::csce438::ServerInfo* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void GetFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ID* request, ::csce438::ServerInfo* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void RegisterServer(::grpc::ClientContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response, std::function<void(::grpc::Status)>) = 0;
       virtual void RegisterServer(::grpc::ClientContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void RegisterFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void RegisterFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
     virtual class async_interface* async() { return nullptr; }
@@ -80,8 +98,12 @@ class CoordService final {
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::csce438::Confirmation>* PrepareAsyncHeartbeatRaw(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::csce438::ServerInfo>* AsyncGetServerRaw(::grpc::ClientContext* context, const ::csce438::ID& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::csce438::ServerInfo>* PrepareAsyncGetServerRaw(::grpc::ClientContext* context, const ::csce438::ID& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::csce438::ServerInfo>* AsyncGetFollowerSyncerRaw(::grpc::ClientContext* context, const ::csce438::ID& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::csce438::ServerInfo>* PrepareAsyncGetFollowerSyncerRaw(::grpc::ClientContext* context, const ::csce438::ID& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::csce438::Confirmation>* AsyncRegisterServerRaw(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::csce438::Confirmation>* PrepareAsyncRegisterServerRaw(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::csce438::Confirmation>* AsyncRegisterFollowerSyncerRaw(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::csce438::Confirmation>* PrepareAsyncRegisterFollowerSyncerRaw(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -100,12 +122,26 @@ class CoordService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::ServerInfo>> PrepareAsyncGetServer(::grpc::ClientContext* context, const ::csce438::ID& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::ServerInfo>>(PrepareAsyncGetServerRaw(context, request, cq));
     }
+    ::grpc::Status GetFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ID& request, ::csce438::ServerInfo* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::ServerInfo>> AsyncGetFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ID& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::ServerInfo>>(AsyncGetFollowerSyncerRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::ServerInfo>> PrepareAsyncGetFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ID& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::ServerInfo>>(PrepareAsyncGetFollowerSyncerRaw(context, request, cq));
+    }
     ::grpc::Status RegisterServer(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::csce438::Confirmation* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::Confirmation>> AsyncRegisterServer(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::Confirmation>>(AsyncRegisterServerRaw(context, request, cq));
     }
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::Confirmation>> PrepareAsyncRegisterServer(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::Confirmation>>(PrepareAsyncRegisterServerRaw(context, request, cq));
+    }
+    ::grpc::Status RegisterFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::csce438::Confirmation* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::Confirmation>> AsyncRegisterFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::Confirmation>>(AsyncRegisterFollowerSyncerRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::Confirmation>> PrepareAsyncRegisterFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::csce438::Confirmation>>(PrepareAsyncRegisterFollowerSyncerRaw(context, request, cq));
     }
     class async final :
       public StubInterface::async_interface {
@@ -114,8 +150,12 @@ class CoordService final {
       void Heartbeat(::grpc::ClientContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response, ::grpc::ClientUnaryReactor* reactor) override;
       void GetServer(::grpc::ClientContext* context, const ::csce438::ID* request, ::csce438::ServerInfo* response, std::function<void(::grpc::Status)>) override;
       void GetServer(::grpc::ClientContext* context, const ::csce438::ID* request, ::csce438::ServerInfo* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void GetFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ID* request, ::csce438::ServerInfo* response, std::function<void(::grpc::Status)>) override;
+      void GetFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ID* request, ::csce438::ServerInfo* response, ::grpc::ClientUnaryReactor* reactor) override;
       void RegisterServer(::grpc::ClientContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response, std::function<void(::grpc::Status)>) override;
       void RegisterServer(::grpc::ClientContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void RegisterFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response, std::function<void(::grpc::Status)>) override;
+      void RegisterFollowerSyncer(::grpc::ClientContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response, ::grpc::ClientUnaryReactor* reactor) override;
      private:
       friend class Stub;
       explicit async(Stub* stub): stub_(stub) { }
@@ -131,11 +171,17 @@ class CoordService final {
     ::grpc::ClientAsyncResponseReader< ::csce438::Confirmation>* PrepareAsyncHeartbeatRaw(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::csce438::ServerInfo>* AsyncGetServerRaw(::grpc::ClientContext* context, const ::csce438::ID& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::csce438::ServerInfo>* PrepareAsyncGetServerRaw(::grpc::ClientContext* context, const ::csce438::ID& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::csce438::ServerInfo>* AsyncGetFollowerSyncerRaw(::grpc::ClientContext* context, const ::csce438::ID& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::csce438::ServerInfo>* PrepareAsyncGetFollowerSyncerRaw(::grpc::ClientContext* context, const ::csce438::ID& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::csce438::Confirmation>* AsyncRegisterServerRaw(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::csce438::Confirmation>* PrepareAsyncRegisterServerRaw(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::csce438::Confirmation>* AsyncRegisterFollowerSyncerRaw(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::csce438::Confirmation>* PrepareAsyncRegisterFollowerSyncerRaw(::grpc::ClientContext* context, const ::csce438::ServerInfo& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_Heartbeat_;
     const ::grpc::internal::RpcMethod rpcmethod_GetServer_;
+    const ::grpc::internal::RpcMethod rpcmethod_GetFollowerSyncer_;
     const ::grpc::internal::RpcMethod rpcmethod_RegisterServer_;
+    const ::grpc::internal::RpcMethod rpcmethod_RegisterFollowerSyncer_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -145,7 +191,9 @@ class CoordService final {
     virtual ~Service();
     virtual ::grpc::Status Heartbeat(::grpc::ServerContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response);
     virtual ::grpc::Status GetServer(::grpc::ServerContext* context, const ::csce438::ID* request, ::csce438::ServerInfo* response);
+    virtual ::grpc::Status GetFollowerSyncer(::grpc::ServerContext* context, const ::csce438::ID* request, ::csce438::ServerInfo* response);
     virtual ::grpc::Status RegisterServer(::grpc::ServerContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response);
+    virtual ::grpc::Status RegisterFollowerSyncer(::grpc::ServerContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_Heartbeat : public BaseClass {
@@ -188,12 +236,32 @@ class CoordService final {
     }
   };
   template <class BaseClass>
+  class WithAsyncMethod_GetFollowerSyncer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_GetFollowerSyncer() {
+      ::grpc::Service::MarkMethodAsync(2);
+    }
+    ~WithAsyncMethod_GetFollowerSyncer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetFollowerSyncer(::grpc::ServerContext* /*context*/, const ::csce438::ID* /*request*/, ::csce438::ServerInfo* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestGetFollowerSyncer(::grpc::ServerContext* context, ::csce438::ID* request, ::grpc::ServerAsyncResponseWriter< ::csce438::ServerInfo>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithAsyncMethod_RegisterServer : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_RegisterServer() {
-      ::grpc::Service::MarkMethodAsync(2);
+      ::grpc::Service::MarkMethodAsync(3);
     }
     ~WithAsyncMethod_RegisterServer() override {
       BaseClassMustBeDerivedFromService(this);
@@ -204,10 +272,30 @@ class CoordService final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestRegisterServer(::grpc::ServerContext* context, ::csce438::ServerInfo* request, ::grpc::ServerAsyncResponseWriter< ::csce438::Confirmation>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_Heartbeat<WithAsyncMethod_GetServer<WithAsyncMethod_RegisterServer<Service > > > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_RegisterFollowerSyncer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_RegisterFollowerSyncer() {
+      ::grpc::Service::MarkMethodAsync(4);
+    }
+    ~WithAsyncMethod_RegisterFollowerSyncer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterFollowerSyncer(::grpc::ServerContext* /*context*/, const ::csce438::ServerInfo* /*request*/, ::csce438::Confirmation* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestRegisterFollowerSyncer(::grpc::ServerContext* context, ::csce438::ServerInfo* request, ::grpc::ServerAsyncResponseWriter< ::csce438::Confirmation>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(4, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_Heartbeat<WithAsyncMethod_GetServer<WithAsyncMethod_GetFollowerSyncer<WithAsyncMethod_RegisterServer<WithAsyncMethod_RegisterFollowerSyncer<Service > > > > > AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_Heartbeat : public BaseClass {
    private:
@@ -263,18 +351,45 @@ class CoordService final {
       ::grpc::CallbackServerContext* /*context*/, const ::csce438::ID* /*request*/, ::csce438::ServerInfo* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
+  class WithCallbackMethod_GetFollowerSyncer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_GetFollowerSyncer() {
+      ::grpc::Service::MarkMethodCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::csce438::ID, ::csce438::ServerInfo>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::csce438::ID* request, ::csce438::ServerInfo* response) { return this->GetFollowerSyncer(context, request, response); }));}
+    void SetMessageAllocatorFor_GetFollowerSyncer(
+        ::grpc::MessageAllocator< ::csce438::ID, ::csce438::ServerInfo>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::csce438::ID, ::csce438::ServerInfo>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_GetFollowerSyncer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetFollowerSyncer(::grpc::ServerContext* /*context*/, const ::csce438::ID* /*request*/, ::csce438::ServerInfo* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* GetFollowerSyncer(
+      ::grpc::CallbackServerContext* /*context*/, const ::csce438::ID* /*request*/, ::csce438::ServerInfo* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
   class WithCallbackMethod_RegisterServer : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_RegisterServer() {
-      ::grpc::Service::MarkMethodCallback(2,
+      ::grpc::Service::MarkMethodCallback(3,
           new ::grpc::internal::CallbackUnaryHandler< ::csce438::ServerInfo, ::csce438::Confirmation>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response) { return this->RegisterServer(context, request, response); }));}
     void SetMessageAllocatorFor_RegisterServer(
         ::grpc::MessageAllocator< ::csce438::ServerInfo, ::csce438::Confirmation>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(3);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::csce438::ServerInfo, ::csce438::Confirmation>*>(handler)
               ->SetMessageAllocator(allocator);
     }
@@ -289,7 +404,34 @@ class CoordService final {
     virtual ::grpc::ServerUnaryReactor* RegisterServer(
       ::grpc::CallbackServerContext* /*context*/, const ::csce438::ServerInfo* /*request*/, ::csce438::Confirmation* /*response*/)  { return nullptr; }
   };
-  typedef WithCallbackMethod_Heartbeat<WithCallbackMethod_GetServer<WithCallbackMethod_RegisterServer<Service > > > CallbackService;
+  template <class BaseClass>
+  class WithCallbackMethod_RegisterFollowerSyncer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_RegisterFollowerSyncer() {
+      ::grpc::Service::MarkMethodCallback(4,
+          new ::grpc::internal::CallbackUnaryHandler< ::csce438::ServerInfo, ::csce438::Confirmation>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::csce438::ServerInfo* request, ::csce438::Confirmation* response) { return this->RegisterFollowerSyncer(context, request, response); }));}
+    void SetMessageAllocatorFor_RegisterFollowerSyncer(
+        ::grpc::MessageAllocator< ::csce438::ServerInfo, ::csce438::Confirmation>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(4);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::csce438::ServerInfo, ::csce438::Confirmation>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_RegisterFollowerSyncer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterFollowerSyncer(::grpc::ServerContext* /*context*/, const ::csce438::ServerInfo* /*request*/, ::csce438::Confirmation* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* RegisterFollowerSyncer(
+      ::grpc::CallbackServerContext* /*context*/, const ::csce438::ServerInfo* /*request*/, ::csce438::Confirmation* /*response*/)  { return nullptr; }
+  };
+  typedef WithCallbackMethod_Heartbeat<WithCallbackMethod_GetServer<WithCallbackMethod_GetFollowerSyncer<WithCallbackMethod_RegisterServer<WithCallbackMethod_RegisterFollowerSyncer<Service > > > > > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_Heartbeat : public BaseClass {
@@ -326,18 +468,52 @@ class CoordService final {
     }
   };
   template <class BaseClass>
+  class WithGenericMethod_GetFollowerSyncer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_GetFollowerSyncer() {
+      ::grpc::Service::MarkMethodGeneric(2);
+    }
+    ~WithGenericMethod_GetFollowerSyncer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetFollowerSyncer(::grpc::ServerContext* /*context*/, const ::csce438::ID* /*request*/, ::csce438::ServerInfo* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
   class WithGenericMethod_RegisterServer : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_RegisterServer() {
-      ::grpc::Service::MarkMethodGeneric(2);
+      ::grpc::Service::MarkMethodGeneric(3);
     }
     ~WithGenericMethod_RegisterServer() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
     ::grpc::Status RegisterServer(::grpc::ServerContext* /*context*/, const ::csce438::ServerInfo* /*request*/, ::csce438::Confirmation* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_RegisterFollowerSyncer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_RegisterFollowerSyncer() {
+      ::grpc::Service::MarkMethodGeneric(4);
+    }
+    ~WithGenericMethod_RegisterFollowerSyncer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterFollowerSyncer(::grpc::ServerContext* /*context*/, const ::csce438::ServerInfo* /*request*/, ::csce438::Confirmation* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -383,12 +559,32 @@ class CoordService final {
     }
   };
   template <class BaseClass>
+  class WithRawMethod_GetFollowerSyncer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_GetFollowerSyncer() {
+      ::grpc::Service::MarkMethodRaw(2);
+    }
+    ~WithRawMethod_GetFollowerSyncer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetFollowerSyncer(::grpc::ServerContext* /*context*/, const ::csce438::ID* /*request*/, ::csce438::ServerInfo* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestGetFollowerSyncer(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithRawMethod_RegisterServer : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_RegisterServer() {
-      ::grpc::Service::MarkMethodRaw(2);
+      ::grpc::Service::MarkMethodRaw(3);
     }
     ~WithRawMethod_RegisterServer() override {
       BaseClassMustBeDerivedFromService(this);
@@ -399,7 +595,27 @@ class CoordService final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestRegisterServer(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_RegisterFollowerSyncer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_RegisterFollowerSyncer() {
+      ::grpc::Service::MarkMethodRaw(4);
+    }
+    ~WithRawMethod_RegisterFollowerSyncer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterFollowerSyncer(::grpc::ServerContext* /*context*/, const ::csce438::ServerInfo* /*request*/, ::csce438::Confirmation* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestRegisterFollowerSyncer(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(4, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -447,12 +663,34 @@ class CoordService final {
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
+  class WithRawCallbackMethod_GetFollowerSyncer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_GetFollowerSyncer() {
+      ::grpc::Service::MarkMethodRawCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetFollowerSyncer(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_GetFollowerSyncer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetFollowerSyncer(::grpc::ServerContext* /*context*/, const ::csce438::ID* /*request*/, ::csce438::ServerInfo* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* GetFollowerSyncer(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
   class WithRawCallbackMethod_RegisterServer : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_RegisterServer() {
-      ::grpc::Service::MarkMethodRawCallback(2,
+      ::grpc::Service::MarkMethodRawCallback(3,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->RegisterServer(context, request, response); }));
@@ -466,6 +704,28 @@ class CoordService final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     virtual ::grpc::ServerUnaryReactor* RegisterServer(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_RegisterFollowerSyncer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_RegisterFollowerSyncer() {
+      ::grpc::Service::MarkMethodRawCallback(4,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->RegisterFollowerSyncer(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_RegisterFollowerSyncer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterFollowerSyncer(::grpc::ServerContext* /*context*/, const ::csce438::ServerInfo* /*request*/, ::csce438::Confirmation* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* RegisterFollowerSyncer(
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
@@ -523,12 +783,39 @@ class CoordService final {
     virtual ::grpc::Status StreamedGetServer(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::csce438::ID,::csce438::ServerInfo>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
+  class WithStreamedUnaryMethod_GetFollowerSyncer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_GetFollowerSyncer() {
+      ::grpc::Service::MarkMethodStreamed(2,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::csce438::ID, ::csce438::ServerInfo>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::csce438::ID, ::csce438::ServerInfo>* streamer) {
+                       return this->StreamedGetFollowerSyncer(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_GetFollowerSyncer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status GetFollowerSyncer(::grpc::ServerContext* /*context*/, const ::csce438::ID* /*request*/, ::csce438::ServerInfo* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedGetFollowerSyncer(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::csce438::ID,::csce438::ServerInfo>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_RegisterServer : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_RegisterServer() {
-      ::grpc::Service::MarkMethodStreamed(2,
+      ::grpc::Service::MarkMethodStreamed(3,
         new ::grpc::internal::StreamedUnaryHandler<
           ::csce438::ServerInfo, ::csce438::Confirmation>(
             [this](::grpc::ServerContext* context,
@@ -549,9 +836,36 @@ class CoordService final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedRegisterServer(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::csce438::ServerInfo,::csce438::Confirmation>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_Heartbeat<WithStreamedUnaryMethod_GetServer<WithStreamedUnaryMethod_RegisterServer<Service > > > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_RegisterFollowerSyncer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_RegisterFollowerSyncer() {
+      ::grpc::Service::MarkMethodStreamed(4,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::csce438::ServerInfo, ::csce438::Confirmation>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::csce438::ServerInfo, ::csce438::Confirmation>* streamer) {
+                       return this->StreamedRegisterFollowerSyncer(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_RegisterFollowerSyncer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status RegisterFollowerSyncer(::grpc::ServerContext* /*context*/, const ::csce438::ServerInfo* /*request*/, ::csce438::Confirmation* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedRegisterFollowerSyncer(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::csce438::ServerInfo,::csce438::Confirmation>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_Heartbeat<WithStreamedUnaryMethod_GetServer<WithStreamedUnaryMethod_GetFollowerSyncer<WithStreamedUnaryMethod_RegisterServer<WithStreamedUnaryMethod_RegisterFollowerSyncer<Service > > > > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_Heartbeat<WithStreamedUnaryMethod_GetServer<WithStreamedUnaryMethod_RegisterServer<Service > > > StreamedService;
+  typedef WithStreamedUnaryMethod_Heartbeat<WithStreamedUnaryMethod_GetServer<WithStreamedUnaryMethod_GetFollowerSyncer<WithStreamedUnaryMethod_RegisterServer<WithStreamedUnaryMethod_RegisterFollowerSyncer<Service > > > > > StreamedService;
 };
 
 }  // namespace csce438

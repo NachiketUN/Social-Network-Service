@@ -54,6 +54,8 @@ PROTOBUF_CONSTEXPR Confirmation::Confirmation(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.status_)*/ false
 
+  , /*decltype(_impl_.is_master_)*/ false
+
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct ConfirmationDefaultTypeInternal {
   PROTOBUF_CONSTEXPR ConfirmationDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
@@ -111,6 +113,7 @@ const ::uint32_t TableStruct_coordinator_2eproto::offsets[] PROTOBUF_SECTION_VAR
     ~0u,  // no _split_
     ~0u,  // no sizeof(Split)
     PROTOBUF_FIELD_OFFSET(::csce438::Confirmation, _impl_.status_),
+    PROTOBUF_FIELD_OFFSET(::csce438::Confirmation, _impl_.is_master_),
     ~0u,  // no _has_bits_
     PROTOBUF_FIELD_OFFSET(::csce438::ID, _internal_metadata_),
     ~0u,  // no _extensions_
@@ -126,7 +129,7 @@ static const ::_pbi::MigrationSchema
     schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
         { 0, -1, -1, sizeof(::csce438::ServerInfo)},
         { 13, -1, -1, sizeof(::csce438::Confirmation)},
-        { 22, -1, -1, sizeof(::csce438::ID)},
+        { 23, -1, -1, sizeof(::csce438::ID)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -138,14 +141,17 @@ const char descriptor_table_protodef_coordinator_2eproto[] PROTOBUF_SECTION_VARI
     "\n\021coordinator.proto\022\007csce438\032\037google/pro"
     "tobuf/timestamp.proto\"]\n\nServerInfo\022\020\n\010s"
     "erverID\030\001 \001(\005\022\020\n\010hostname\030\002 \001(\t\022\014\n\004port\030"
-    "\003 \001(\t\022\014\n\004type\030\004 \001(\t\022\017\n\007cluster\030\005 \001(\005\"\036\n\014"
-    "Confirmation\022\016\n\006status\030\001 \001(\010\"\020\n\002ID\022\n\n\002id"
-    "\030\001 \001(\0052\272\001\n\014CoordService\0229\n\tHeartbeat\022\023.c"
-    "sce438.ServerInfo\032\025.csce438.Confirmation"
-    "\"\000\022/\n\tGetServer\022\013.csce438.ID\032\023.csce438.S"
-    "erverInfo\"\000\022>\n\016RegisterServer\022\023.csce438."
-    "ServerInfo\032\025.csce438.Confirmation\"\000b\006pro"
-    "to3"
+    "\003 \001(\t\022\014\n\004type\030\004 \001(\t\022\017\n\007cluster\030\005 \001(\005\"1\n\014"
+    "Confirmation\022\016\n\006status\030\001 \001(\010\022\021\n\tis_maste"
+    "r\030\002 \001(\010\"\020\n\002ID\022\n\n\002id\030\001 \001(\0052\273\002\n\014CoordServi"
+    "ce\0229\n\tHeartbeat\022\023.csce438.ServerInfo\032\025.c"
+    "sce438.Confirmation\"\000\022/\n\tGetServer\022\013.csc"
+    "e438.ID\032\023.csce438.ServerInfo\"\000\0227\n\021GetFol"
+    "lowerSyncer\022\013.csce438.ID\032\023.csce438.Serve"
+    "rInfo\"\000\022>\n\016RegisterServer\022\023.csce438.Serv"
+    "erInfo\032\025.csce438.Confirmation\"\000\022F\n\026Regis"
+    "terFollowerSyncer\022\023.csce438.ServerInfo\032\025"
+    ".csce438.Confirmation\"\000b\006proto3"
 };
 static const ::_pbi::DescriptorTable* const descriptor_table_coordinator_2eproto_deps[1] =
     {
@@ -155,7 +161,7 @@ static ::absl::once_flag descriptor_table_coordinator_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_coordinator_2eproto = {
     false,
     false,
-    403,
+    551,
     descriptor_table_protodef_coordinator_2eproto,
     "coordinator.proto",
     &descriptor_table_coordinator_2eproto_once,
@@ -571,6 +577,8 @@ inline void Confirmation::SharedCtor(::_pb::Arena* arena) {
   new (&_impl_) Impl_{
       decltype(_impl_.status_) { false }
 
+    , decltype(_impl_.is_master_) { false }
+
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
@@ -598,7 +606,9 @@ void Confirmation::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  _impl_.status_ = false;
+  ::memset(&_impl_.status_, 0, static_cast<::size_t>(
+      reinterpret_cast<char*>(&_impl_.is_master_) -
+      reinterpret_cast<char*>(&_impl_.status_)) + sizeof(_impl_.is_master_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -612,6 +622,15 @@ const char* Confirmation::_InternalParse(const char* ptr, ::_pbi::ParseContext* 
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 8)) {
           _impl_.status_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else {
+          goto handle_unusual;
+        }
+        continue;
+      // bool is_master = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 16)) {
+          _impl_.is_master_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else {
           goto handle_unusual;
@@ -653,6 +672,13 @@ failure:
         1, this->_internal_status(), target);
   }
 
+  // bool is_master = 2;
+  if (this->_internal_is_master() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(
+        2, this->_internal_is_master(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -671,6 +697,11 @@ failure:
 
   // bool status = 1;
   if (this->_internal_status() != 0) {
+    total_size += 2;
+  }
+
+  // bool is_master = 2;
+  if (this->_internal_is_master() != 0) {
     total_size += 2;
   }
 
@@ -695,6 +726,9 @@ void Confirmation::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::P
   if (from._internal_status() != 0) {
     _this->_internal_set_status(from._internal_status());
   }
+  if (from._internal_is_master() != 0) {
+    _this->_internal_set_is_master(from._internal_is_master());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -712,8 +746,12 @@ bool Confirmation::IsInitialized() const {
 void Confirmation::InternalSwap(Confirmation* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-
-  swap(_impl_.status_, other->_impl_.status_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(Confirmation, _impl_.is_master_)
+      + sizeof(Confirmation::_impl_.is_master_)
+      - PROTOBUF_FIELD_OFFSET(Confirmation, _impl_.status_)>(
+          reinterpret_cast<char*>(&_impl_.status_),
+          reinterpret_cast<char*>(&other->_impl_.status_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata Confirmation::GetMetadata() const {

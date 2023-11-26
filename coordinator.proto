@@ -12,7 +12,9 @@ import "google/protobuf/timestamp.proto";
 service CoordService{
   rpc Heartbeat (ServerInfo) returns (Confirmation) {}
   rpc GetServer (ID) returns (ServerInfo) {}
+  rpc GetFollowerSyncer (ID) returns (ServerInfo) {}
   rpc RegisterServer(ServerInfo) returns (Confirmation) {}
+  rpc RegisterFollowerSyncer(ServerInfo) returns (Confirmation) {}
   // ZooKeeper API here
 }
 
@@ -28,6 +30,7 @@ message ServerInfo{
 //confirmation message definition
 message Confirmation{
   bool status = 1;
+  bool is_master = 2;
 }
 
 //id message definition
