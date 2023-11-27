@@ -2,12 +2,13 @@
 #define CSV_UTILS_H
 
 #include <string>
+#include <set>
 #include <vector>
 
 struct UserData {
     std::string username;
-    std::vector<std::string> followingList;
-    std::vector<std::string> followerList;
+    std::set<std::string> followingList;
+    std::set<std::string> followerList;
 };
 
 void readCSV(const std::string& filename, std::vector<UserData> &userDataList);
@@ -20,7 +21,7 @@ void printUserDataList(const std::vector<UserData>& userDataList);
 std::string readCSVToString(const std::string& filename);
 void convertStringToUserDataList(const std::string& csvString,std::vector<UserData> &userDataList);
 bool containsUser(const std::vector<UserData>& userDataList, const std::string& username);
-
+void findAllUsers(const std::string& directory, std::vector<std::string>& clientNames);
 void getUsernamesWithFollowingList(const std::vector<UserData>& userList, const std::string& username2,std::vector<std::string> &usernames);
 
 

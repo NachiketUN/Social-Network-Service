@@ -1,2 +1,2 @@
-1 ; following_list: 2 2 2 2 2 ; follower_list: 2 ;
-; ; following_list: ; follower_list: ;
+1 ; following_list: 4 ; follower_list: 4 ;
+4 ; following_list: 1 ; follower_list: 1 ;

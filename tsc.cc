@@ -9,6 +9,7 @@
 #include <thread>
 #include <iomanip>
 #include <filesystem>
+#include <fstream> 
 #include <grpc++/grpc++.h>
 #include <google/protobuf/util/time_util.h>
 
@@ -90,13 +91,15 @@ int Client::connectTo()
     ID clientid;
     clientid.set_id(std::stoi(username));
     string serverhost = "", serverport ="";
+    int cluster;
     while(true){
       ClientContext context;
       ServerInfo serverInfo;
       Status status = coordstub_->GetServer(&context, clientid, &serverInfo);
-      if(status.ok()){
+      if(status.ok() && serverInfo.cluster()){
         serverhost = serverInfo.hostname();
         serverport = serverInfo.port();
+        cluster = serverInfo.cluster();
         break;
       }
       else{
@@ -112,7 +115,16 @@ int Client::connectTo()
     if(!loginreply.comm_status == IStatus::SUCCESS){
       return -1;
     }
+    cout<<"Got assigned to Cluster: "<<cluster<<endl;
+    const std::string fileName = "client_"+username+".txt";
 
+    std::ofstream outputFile(fileName, std::ios::app);
+
+    if (outputFile.is_open()) {
+        outputFile.close();
+    } else {
+        std::cerr << "Error creating the client file." << std::endl;
+    }
     return 1;
 }
 
@@ -293,7 +305,7 @@ void Client::Timeline(const std::string& username) {
 
     thread sycnTL([&username](){
       while(1){
-           sleep(5);
+           sleep(2);
            std::string filePath = "client_"+username+".txt";
            
            if (std::filesystem::exists(filePath)) {
@@ -333,6 +345,7 @@ void Client::Timeline(const std::string& username) {
       time_t posttime = std::chrono::duration_cast<std::chrono::seconds>(totalDuration).count();
       if(server_message.msg().empty()){
         cout<<"Connection Failed\n";
+        break;
       }else
       displayPostMessage(server_message.username(),server_message.msg(), posttime);
     }
@@ -354,7 +367,7 @@ void Client::Timeline(const std::string& username) {
 /////////////////////////////////////////////
 int main(int argc, char** argv) {
   signal(SIGINT, sig_ignore);
-  cout<<"hello here\n";
+  // cout<<"hello here\n";
 
   std::string hostname = "localhost";
   std::string username = "default";

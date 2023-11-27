@@ -28,7 +28,8 @@ run_command() {
     echo "Error starting command '$command'."
   fi
 }
-
+rm *.txt
+rm *.csv
 # Run the first command with a delay of 5 seconds
 process_name="coordinator"
 run_command "$process_name" "${commands[0]}"

@@ -84,7 +84,7 @@ class CoordServiceImpl final : public CoordService::Service {
     // Your code here
     int cluster_id = serverinfo->cluster();
     int serverid = serverinfo->serverid();
-          LOG(INFO)<<" HeartBeat from cluster: "<<cluster_id<<" server:"<<to_string(serverid)<<std::endl;
+          // LOG(INFO)<<" HeartBeat from cluster: "<<cluster_id<<" server:"<<to_string(serverid)<<std::endl;
     zNode *node = nullptr;
     switch (cluster_id) {
       case 1:
@@ -104,7 +104,7 @@ class CoordServiceImpl final : public CoordService::Service {
     if (node != nullptr) {
       node->last_heartbeat = getTimeNow();
       confirmation->set_status(true);
-      LOG(INFO)<<"Receieved HeartBeat from cluster: "<<cluster_id<<" server:"<<to_string(serverid)<<std::endl;
+      // LOG(INFO)<<"Receieved HeartBeat from cluster: "<<cluster_id<<" server:"<<to_string(serverid)<<std::endl;
     } else {
       confirmation->set_status(false);
     }
@@ -172,6 +172,42 @@ class CoordServiceImpl final : public CoordService::Service {
     serverinfo->set_port(server->port);
     serverinfo->set_type(server->type);
     serverinfo->set_cluster(serverID);
+
+    // cout << "found server and sending back\n";
+    return Status::OK;
+  }
+
+  Status GetBackupServer(ServerContext *context, const ID *id,
+                   ServerInfo *serverinfo) override {
+    int clusterID = (id->id() % 3);
+    clusterID = (clusterID ? clusterID : 3);
+    // cout << to_string(serverID);
+    zNode *server = nullptr;
+    switch (clusterID) {
+      case 1:
+        server = getBackupFromCluster(cluster1);
+        break;
+      case 2:
+        server = getBackupFromCluster(cluster2);
+        break;
+      case 3:
+        server = getBackupFromCluster(cluster3);
+
+        break;
+      default:
+        break;
+    }
+    if (server == nullptr) {
+      // cout << "Couldn't find Backup from cluster"<<to_string(serverID)<<"\n";
+      return grpc::Status(grpc::StatusCode::NOT_FOUND,
+                          "No backup server is alive in cluster");
+    }
+    
+    serverinfo->set_serverid(server->serverid);
+    serverinfo->set_hostname(server->hostname);
+    serverinfo->set_port(server->port);
+    serverinfo->set_type(server->type);
+    serverinfo->set_cluster(clusterID);
 
     // cout << "found server and sending back\n";
     return Status::OK;
@@ -246,6 +282,7 @@ class CoordServiceImpl final : public CoordService::Service {
     //        << " master:" << s->is_master << " alive:" << s->isActive() << "\n";
     // }
     confirmation->set_status(true);
+    confirmation->set_is_master(new_node->is_master);
     return Status::OK;
   }
 
@@ -273,6 +310,15 @@ class CoordServiceImpl final : public CoordService::Service {
     for (auto &z : cluster) {
       if (z->serverid == serverid) return z;
     }
+    return nullptr;
+  }
+  zNode *getBackupFromCluster(std::vector<zNode *> &cluster) {
+    for (auto &z : cluster) {
+      if (!z->is_master) {
+          return z;
+      }
+    }
+
     return nullptr;
   }
   zNode *getMasterFromCluster(std::vector<zNode *> &cluster) {
@@ -358,8 +404,9 @@ void checkHeartbeat() {
     // check servers for heartbeat > 10
     // if true turn missed heartbeat = true
     //  Your code below
+    cout<<"----------\n";
     for (zNode *s : serverList) {
-      cout<<"Check heartbeat Clusrer:"<<s->cluster<<" ServerID: "<<s->serverid<<std::boolalpha<<"master:"<<s->is_master<<" alive:"<<s->isActive()<<"\n";
+      cout<<"Check heartbeat Cluster:"<<s->cluster<<" ServerID: "<<s->serverid<<std::boolalpha<<"master:"<<s->is_master<<" alive:"<<s->isActive()<<"\n";
 
       if (difftime(getTimeNow(), s->last_heartbeat) > 10) {
         // LOG(INFO) <<s->serverid<<" has missed missed_heartbeat\n";
@@ -369,6 +416,7 @@ void checkHeartbeat() {
         }
       }
     }
+    // cout<<"-----------------------------------------------------------------------------------\n";
 
     sleep(3);
   }

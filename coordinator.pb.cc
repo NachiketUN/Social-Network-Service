@@ -143,15 +143,17 @@ const char descriptor_table_protodef_coordinator_2eproto[] PROTOBUF_SECTION_VARI
     "erverID\030\001 \001(\005\022\020\n\010hostname\030\002 \001(\t\022\014\n\004port\030"
     "\003 \001(\t\022\014\n\004type\030\004 \001(\t\022\017\n\007cluster\030\005 \001(\005\"1\n\014"
     "Confirmation\022\016\n\006status\030\001 \001(\010\022\021\n\tis_maste"
-    "r\030\002 \001(\010\"\020\n\002ID\022\n\n\002id\030\001 \001(\0052\273\002\n\014CoordServi"
+    "r\030\002 \001(\010\"\020\n\002ID\022\n\n\002id\030\001 \001(\0052\362\002\n\014CoordServi"
     "ce\0229\n\tHeartbeat\022\023.csce438.ServerInfo\032\025.c"
     "sce438.Confirmation\"\000\022/\n\tGetServer\022\013.csc"
-    "e438.ID\032\023.csce438.ServerInfo\"\000\0227\n\021GetFol"
-    "lowerSyncer\022\013.csce438.ID\032\023.csce438.Serve"
-    "rInfo\"\000\022>\n\016RegisterServer\022\023.csce438.Serv"
-    "erInfo\032\025.csce438.Confirmation\"\000\022F\n\026Regis"
-    "terFollowerSyncer\022\023.csce438.ServerInfo\032\025"
-    ".csce438.Confirmation\"\000b\006proto3"
+    "e438.ID\032\023.csce438.ServerInfo\"\000\0225\n\017GetBac"
+    "kupServer\022\013.csce438.ID\032\023.csce438.ServerI"
+    "nfo\"\000\0227\n\021GetFollowerSyncer\022\013.csce438.ID\032"
+    "\023.csce438.ServerInfo\"\000\022>\n\016RegisterServer"
+    "\022\023.csce438.ServerInfo\032\025.csce438.Confirma"
+    "tion\"\000\022F\n\026RegisterFollowerSyncer\022\023.csce4"
+    "38.ServerInfo\032\025.csce438.Confirmation\"\000b\006"
+    "proto3"
 };
 static const ::_pbi::DescriptorTable* const descriptor_table_coordinator_2eproto_deps[1] =
     {
@@ -161,7 +163,7 @@ static ::absl::once_flag descriptor_table_coordinator_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_coordinator_2eproto = {
     false,
     false,
-    551,
+    606,
     descriptor_table_protodef_coordinator_2eproto,
     "coordinator.proto",
     &descriptor_table_coordinator_2eproto_once,

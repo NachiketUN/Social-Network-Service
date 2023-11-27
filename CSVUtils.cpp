@@ -4,9 +4,23 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <iostream>
+#include <filesystem>
+#include <vector>
 #include <sstream>
+namespace fs = std::filesystem;
+
+
 
 void readCSV(const std::string& filename, std::vector<UserData>& userDataList) {
+
+  std::ofstream outputFile(filename, std::ios::app);
+
+    if (outputFile.is_open()) {
+        outputFile.close();
+    } else {
+        std::cerr << "Error creating the client file." << std::endl;
+    }
   std::ifstream file(filename);
 
   if (file.is_open()) {
@@ -29,7 +43,7 @@ void readCSV(const std::string& filename, std::vector<UserData>& userDataList) {
       if (followingLabel == "following_list:") {
         std::string followingUser;
         while (iss >> followingUser && followingUser.back() != ';') {
-          userData.followingList.push_back(followingUser);
+          userData.followingList.insert(followingUser);
         }
       }
 
@@ -40,7 +54,7 @@ void readCSV(const std::string& filename, std::vector<UserData>& userDataList) {
       if (followerLabel == "follower_list:") {
         std::string followerUser;
         while (iss >> followerUser && followerUser.back() != ';') {
-          userData.followerList.push_back(followerUser);
+          userData.followerList.insert(followerUser);
         }
       }
 
@@ -87,8 +101,16 @@ void updateFollowingList(std::vector<UserData>& userDataList,
                          });
 
   if (it != userDataList.end()) {
-    it->followingList.push_back(newFollowingUser);
+    it->followingList.insert(newFollowingUser);
   }
+  auto it1 = std::find_if(userDataList.begin(), userDataList.end(),
+                         [&targetUser, &newFollowingUser](const UserData& user) {
+                           return user.username == newFollowingUser;
+                         });
+  if (it1 != userDataList.end()) {
+    it1->followerList.insert(targetUser);
+  }
+
 }
 
 void addUser(std::vector<UserData>& userDataList, const std::string& username) {
@@ -116,7 +138,7 @@ void updateFollowerList(std::vector<UserData>& userDataList,
 
   // If user is found, update the follower list
   if (it != userDataList.end()) {
-    it->followerList.push_back(newFollowerUser);
+    it->followerList.insert(newFollowerUser);
   }
 }
 
@@ -153,6 +175,24 @@ std::string readCSVToString(const std::string& filename) {
   }
 }
 
+void findAllUsers(const std::string& directory, std::vector<std::string>& clientNames) {
+    
+
+    try {
+        for (const auto& entry : fs::directory_iterator(directory)) {
+            if (entry.is_regular_file() && entry.path().filename().string().find("client_") == 0) {
+                std::string fileName = entry.path().filename().string();
+                std::string clientName = fileName.substr(7, fileName.size() - 11);
+                
+                clientNames.push_back(clientName);
+            }
+        }
+    } catch (const std::filesystem::filesystem_error& ex) {
+        std::cerr << "Error accessing the directory: " << ex.what() << std::endl;
+    }
+
+}
+
 void convertStringToUserDataList(const std::string& csvString,
                                  std::vector<UserData>& userDataList) {
   std::istringstream iss(csvString);
@@ -176,7 +216,7 @@ void convertStringToUserDataList(const std::string& csvString,
     if (followingLabel == "following_list:") {
       std::string followingUser;
       while (iss >> followingUser && followingUser.back() != ';') {
-        userData.followingList.push_back(followingUser);
+        userData.followingList.insert(followingUser);
       }
     }
 
@@ -187,7 +227,7 @@ void convertStringToUserDataList(const std::string& csvString,
     if (followerLabel == "follower_list:") {
       std::string followerUser;
       while (iss >> followerUser && followerUser.back() != ';') {
-        userData.followerList.push_back(followerUser);
+        userData.followerList.insert(followerUser);
       }
     }
 

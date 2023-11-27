@@ -14,11 +14,12 @@ struct TimelinePosts {
 };
 
 void readTimelinePosts(const std::string& filename, std::vector<TimelinePosts> &postsList);
+void readTimelinePosts(const std::string& filename, std::vector<TimelinePosts> &postsList, std::string &username);
 void writeTimelinePosts(const std::string& filename, const std::vector<TimelinePosts>& postsList);
 void appendTimelinePosts(const std::string& filename, const std::vector<TimelinePosts>& postsList);
 
 void printTimelinePostsList(const std::vector<TimelinePosts>& postsList);
-std::string processTimelinePosts(std::vector<TimelinePosts>& postsList);
+std::string processTimelinePosts(std::vector<TimelinePosts>& postsList, std::string &username);
 void convertStringToTimelinePosts(std::string postsString, std::vector<TimelinePosts> &postsList);
 
 

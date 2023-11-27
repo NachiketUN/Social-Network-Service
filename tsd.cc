@@ -46,6 +46,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <set>
 #define log(severity, msg) \
   LOG(severity) << msg;    \
   google::FlushLogFiles(google::severity);
@@ -73,6 +74,7 @@ using grpc::ServerReaderWriter;
 using grpc::ServerWriter;
 using grpc::Status;
 using namespace std;
+namespace fs = std::filesystem;
 
 void sendHeartbeat();
 struct Coordinator {
@@ -114,17 +116,35 @@ class SNSServiceImpl final : public SNSService::Service {
     Client *client = nullptr;
 
     // Find all the clients in client_db and add them to user list
-    for (Client *iter : client_db) {
-      list_reply->add_all_users(iter->username);
-      if (iter->username == username) {
-        client = iter;
+    // for (Client *iter : client_db) {
+    //   list_reply->add_all_users(iter->username);
+    //   if (iter->username == username) {
+    //     client = iter;
+    //   }
+    // }
+    // Find all the followers of current client and add them to followers list
+    // for (Client *iter : client->client_followers) {
+    //   if (iter->username == request->username()) continue;
+    //   list_reply->add_followers(iter->username);
+    // }
+    std:set<string> followers;
+    userDataList.clear();
+    readCSV(serverFile,userDataList);
+    for(const auto &user: userDataList){
+      if(user.username == username){
+        followers = user.followerList;
+        break;
       }
     }
-    // Find all the followers of current client and add them to followers list
-    for (Client *iter : client->client_followers) {
-      if (iter->username == request->username()) continue;
-      list_reply->add_followers(iter->username);
+    // std::sort(followers.begin(), followers.end());
+    for(auto &follower: followers){
+      list_reply->add_followers(follower);
     }
+    vector<string> clientNames;
+    findAllUsers("./",clientNames);
+    std::sort(clientNames.begin(), clientNames.end());
+    for(auto &name: clientNames)
+      list_reply->add_all_users(name);
     return Status::OK;
   }
 
@@ -268,6 +288,8 @@ class SNSServiceImpl final : public SNSService::Service {
       //         }
       //         outFile << new_login_client->username<<"; ; ;\n";
       //         outFile.close();
+      userDataList.clear();
+      readCSV(serverFile,userDataList);
       addUser(userDataList, new_login_client->username);
       writeCSV(serverFile, userDataList);
       reply->set_msg("Login Success");
@@ -332,15 +354,19 @@ class SNSServiceImpl final : public SNSService::Service {
             // Send the latest 20 posts to client
             for (auto post = posts.begin(); post != posts.end(); ++post) {
               client_message.set_msg(post->content);
+              std::tm tm;
+                std::istringstream iss(post->date.c_str());
+                iss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+                // std::time_t timeT = std::mktime(&tm)
               google::protobuf::Timestamp *timestamp =
                   new google::protobuf::Timestamp();
-              struct tm tm_time;
-              if (strptime(post->date.c_str(), "%Y-%m-%d %H:%M:%S", &tm_time) ==
-                  nullptr) {
-                std::cout << "Error parsing datetime string." << std::endl;
-              }
+              // struct tm tm_time;
+              // if (strptime(post->date.c_str(), "%Y-%m-%d %H:%M:%S", &tm_time) ==
+              //     nullptr) {
+              //   std::cout << "Error parsing datetime string." << std::endl;
+              // }
 
-              int64_t seconds = mktime(&tm_time);
+              int64_t seconds = mktime(&tm);
 
               timestamp->set_seconds(seconds);
               timestamp->set_nanos(0);
@@ -355,7 +381,6 @@ class SNSServiceImpl final : public SNSService::Service {
         }
       } else  // Incase when the client sends a genuine message(not a dummy one)
       {
-        cout << "else not dummy block\n";
         string username = client_message.username();
         char buffer[20];
         time_t seconds = client_message.timestamp().seconds();
@@ -363,10 +388,12 @@ class SNSServiceImpl final : public SNSService::Service {
         gmtime_r(&seconds, &timeinfo);
         strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo);
         string post_time(buffer);
+        // std::string postContent = "T " + post_time + "\nU " +
+        //                           client_message.username() + "\nW " +
+        //                           client_message.msg() + "S 0\nC 1\n\n";
         std::string postContent = "T " + post_time + "\nU " +
                                   client_message.username() + "\nW " +
-                                  client_message.msg() + "S 0\nC 1\n\n";
-
+                                  client_message.msg();
         // Find client from client_db
         Client *client = *find_if(
             client_db.begin(), client_db.end(),
@@ -381,10 +408,16 @@ class SNSServiceImpl final : public SNSService::Service {
         // corresponding files
         thread writer([&follower_list, &postContent, &client_message]() {
           cout << "in new thread\n";
-          // Backup plan Check if timeline file of client lenght has changed,if
           // so then write those messages to follower list
 
           for (Client *follower : follower_list) {
+            string postMessage = postContent;
+            if(follower->username == client_message.username()){
+              postMessage = postMessage + "S 0\nC 1\n\n";
+            }
+            else{
+              postMessage = postMessage + "S 1\nC 1\n\n";
+            }
             if (follower->username != client_message.username()) {
               follower->following_file_size = 1;
               if (follower->stream != 0) {
@@ -399,7 +432,7 @@ class SNSServiceImpl final : public SNSService::Service {
             if (!outFile.is_open()) {
               std::cout << "Failed to open the file for writing." << std::endl;
             }
-            outFile << postContent;
+            outFile << postMessage;
             outFile.close();
           }
         });
@@ -412,7 +445,7 @@ class SNSServiceImpl final : public SNSService::Service {
 
 void RunServer(std::string port_no) {
   readCSV(serverFile, userDataList);
-  printUserDataList(userDataList);
+  // printUserDataList(userDataList);
   std::string server_address = "0.0.0.0:" + port_no;
   SNSServiceImpl service;
 
@@ -443,6 +476,12 @@ void RunServer(std::string port_no) {
       std::cout << "Registered with Coordinator Cluster No:"
                 << CoordinatorDetails.clusterId
                 << " Server:" << CoordinatorDetails.serverID << std::endl;
+                if(registerConfirmation.is_master()){
+                  cout<<"Got assigned as master server \n";
+                }
+                else{
+                  cout<<"Got assigned as backup server \n";
+                }
       break;
     } else {
       // Handle the error

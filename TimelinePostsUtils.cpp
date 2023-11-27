@@ -5,6 +5,58 @@
 #include <iostream>
 #include <sstream>
 
+void readTimelinePosts(const std::string& filename, std::vector<TimelinePosts> &postsList, std::string &username){
+  std::ifstream file(filename);
+
+  if (file.is_open()) {
+    TimelinePosts posts;
+    std::string line;
+
+    while (std::getline(file, line)) {
+      if (line.empty()) {
+        continue;  // Skip empty lines
+      }
+
+      std::istringstream iss(line);
+      char type;
+      iss >> type;
+
+      switch (type) {
+        case 'T':
+
+          iss >> std::ws;
+          std::getline(iss, posts.timestamp);
+          break;
+        case 'U':
+          iss >> posts.username;
+          break;
+        case 'W':
+          iss >> posts.content;
+          break;
+        case 'S':
+          int syncProcessing;
+          iss >> syncProcessing;
+          posts.syncProcessing = static_cast<bool>(syncProcessing);
+          break;
+        case 'C':
+          int clientProcessing;
+          iss >> clientProcessing;
+          posts.clientProcessing = static_cast<bool>(clientProcessing);
+          if(posts.username == username){
+            postsList.push_back(posts);  // Push the posts to the list after reading 'C'
+          }
+          break;
+        default:
+          std::cerr << "Unknown type: " << type << std::endl;
+      }
+    }
+
+    file.close();
+  } else {
+    std::cerr << "Unable to open file: " << filename << std::endl;
+  }
+}
+
 void readTimelinePosts(const std::string& filename,
                        std::vector<TimelinePosts>& postsList) {
   std::ifstream file(filename);
@@ -106,11 +158,11 @@ void printTimelinePostsList(const std::vector<TimelinePosts>& postsList) {
 //     return result.str();
 // }
 
-std::string processTimelinePosts(std::vector<TimelinePosts>& postsList) {
+std::string processTimelinePosts(std::vector<TimelinePosts>& postsList, std::string &username) {
   std::ostringstream result;
 
   for (auto& posts : postsList) {
-    if (posts.syncProcessing == true) continue;
+    if (posts.syncProcessing == true || posts.username != username) continue;
     result << "T " << posts.timestamp << "\n";
     result << "U " << posts.username << "\n";
     result << "W " << posts.content << "\n";
