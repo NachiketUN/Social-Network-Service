@@ -342,15 +342,9 @@ class SNSServiceImpl final : public SNSService::Service {
             std::tm tm;
             std::istringstream iss(post->timestamp);
             iss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
-            // std::time_t timeT = std::mktime(&tm)
             google::protobuf::Timestamp *timestamp =
                 new google::protobuf::Timestamp();
-            // struct tm tm_time;
-            // if (strptime(post->date.c_str(), "%Y-%m-%d %H:%M:%S", &tm_time)
-            // ==
-            //     nullptr) {
-            //   std::cout << "Error parsing datetime string." << std::endl;
-            // }
+
 
             int64_t seconds = mktime(&tm);
 
@@ -372,9 +366,7 @@ class SNSServiceImpl final : public SNSService::Service {
         gmtime_r(&seconds, &timeinfo);
         strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo);
         string post_time(buffer);
-        // std::string postContent = "T " + post_time + "\nU " +
-        //                           client_message.username() + "\nW " +
-        //                           client_message.msg() + "S 0\nC 1\n\n";
+        
         std::string postContent = "T " + post_time + "\nU " +
                                   client_message.username() + "\nW " +
                                   client_message.msg();
