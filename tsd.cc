@@ -44,14 +44,15 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <string>
 #include <thread>
-#include <set>
 #define log(severity, msg) \
   LOG(severity) << msg;    \
   google::FlushLogFiles(google::severity);
 
 #include "CSVUtils.h"
+#include "TimelinePostsUtils.h"
 #include "coordinator.grpc.pb.h"
 #include "sns.grpc.pb.h"
 using csce438::Confirmation;
@@ -115,36 +116,36 @@ class SNSServiceImpl final : public SNSService::Service {
     std::string username = request->username();
     Client *client = nullptr;
 
-    // Find all the clients in client_db and add them to user list
-    // for (Client *iter : client_db) {
-    //   list_reply->add_all_users(iter->username);
-    //   if (iter->username == username) {
-    //     client = iter;
-    //   }
-    // }
-    // Find all the followers of current client and add them to followers list
-    // for (Client *iter : client->client_followers) {
-    //   if (iter->username == request->username()) continue;
-    //   list_reply->add_followers(iter->username);
-    // }
-    std:set<string> followers;
+  // Find all the clients in client_db and add them to user list
+  // for (Client *iter : client_db) {
+  //   list_reply->add_all_users(iter->username);
+  //   if (iter->username == username) {
+  //     client = iter;
+  //   }
+  // }
+  // Find all the followers of current client and add them to followers list
+  // for (Client *iter : client->client_followers) {
+  //   if (iter->username == request->username()) continue;
+  //   list_reply->add_followers(iter->username);
+  // }
+  std:
+    set<string> followers;
     userDataList.clear();
-    readCSV(serverFile,userDataList);
-    for(const auto &user: userDataList){
-      if(user.username == username){
+    readCSV(serverFile, userDataList);
+    for (const auto &user : userDataList) {
+      if (user.username == username) {
         followers = user.followerList;
         break;
       }
     }
     // std::sort(followers.begin(), followers.end());
-    for(auto &follower: followers){
+    for (auto &follower : followers) {
       list_reply->add_followers(follower);
     }
     vector<string> clientNames;
-    findAllUsers("./",clientNames);
+    findAllUsers("./", clientNames);
     std::sort(clientNames.begin(), clientNames.end());
-    for(auto &name: clientNames)
-      list_reply->add_all_users(name);
+    for (auto &name : clientNames) list_reply->add_all_users(name);
     return Status::OK;
   }
 
@@ -289,7 +290,7 @@ class SNSServiceImpl final : public SNSService::Service {
       //         outFile << new_login_client->username<<"; ; ;\n";
       //         outFile.close();
       userDataList.clear();
-      readCSV(serverFile,userDataList);
+      readCSV(serverFile, userDataList);
       addUser(userDataList, new_login_client->username);
       writeCSV(serverFile, userDataList);
       reply->set_msg("Login Success");
@@ -316,68 +317,51 @@ class SNSServiceImpl final : public SNSService::Service {
         if (client->following_file_size)  // User file already exists, send 20
                                           // latest posts from file
         {
-          std::ifstream file("client_" + client->username + ".txt");
-          cout << "reading file";
-          if (!file.is_open()) {
-            std::cout << "Error opening file." << std::endl;
-          } else {
-            int n = 20;
-            std::vector<Post> posts;
-            std::string line;
-            // Read all the posts from file
-            while (std::getline(file, line)) {
-              Post post;
-              int line_no = 0;
-              while (line_no < 3) {
-                if (line.empty()) break;
-                post.type = line[0];
-                switch (post.type) {
-                  case 'T':
-                    post.date = line.substr(2);
-                    break;
-                  case 'U':
-                    post.username = line.substr(2);
-                    break;
-                  case 'W':
-                    post.content = line.substr(2);
-                    break;
-                  default:
-                    // Invalid post type, skip this post
-                    break;
-                }
-                line_no++;
-                std::getline(file, line);
+          std::string filePath = "client_" + client->username + ".txt";
+          vector<TimelinePosts> clientPosts;
+          if (std::filesystem::exists(filePath)) {
+            readTimelinePosts(filePath, clientPosts);
+            bool writeNeeded = false;
+            for (auto &post : clientPosts) {
+              if (post.clientProcessing == false) {
+                // std::tm tm;
+                // std::istringstream iss(post.timestamp);
+                // iss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+                // std::time_t timeT = std::mktime(&tm);
+                // displayPostMessage(post.username,post.content, timeT);
+                post.clientProcessing = true;
+                writeNeeded = true;
               }
-              if (line_no == 3) posts.push_back(post);
             }
-
-            // Send the latest 20 posts to client
-            for (auto post = posts.begin(); post != posts.end(); ++post) {
-              client_message.set_msg(post->content);
-              std::tm tm;
-                std::istringstream iss(post->date.c_str());
-                iss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
-                // std::time_t timeT = std::mktime(&tm)
-              google::protobuf::Timestamp *timestamp =
-                  new google::protobuf::Timestamp();
-              // struct tm tm_time;
-              // if (strptime(post->date.c_str(), "%Y-%m-%d %H:%M:%S", &tm_time) ==
-              //     nullptr) {
-              //   std::cout << "Error parsing datetime string." << std::endl;
-              // }
-
-              int64_t seconds = mktime(&tm);
-
-              timestamp->set_seconds(seconds);
-              timestamp->set_nanos(0);
-              client_message.set_allocated_timestamp(timestamp);
-              client_message.set_username(post->username);
-              stream->Write(client_message);
-              n--;
-              if (n == 0) break;
-            }
+            if (writeNeeded) writeTimelinePosts(filePath, clientPosts);
           }
-          file.close();
+          // Send the latest 20 posts to client
+          int n = 20;
+          for (auto post = clientPosts.begin(); post != clientPosts.end(); ++post) {
+            client_message.set_msg(post->content);
+            std::tm tm;
+            std::istringstream iss(post->timestamp);
+            iss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+            // std::time_t timeT = std::mktime(&tm)
+            google::protobuf::Timestamp *timestamp =
+                new google::protobuf::Timestamp();
+            // struct tm tm_time;
+            // if (strptime(post->date.c_str(), "%Y-%m-%d %H:%M:%S", &tm_time)
+            // ==
+            //     nullptr) {
+            //   std::cout << "Error parsing datetime string." << std::endl;
+            // }
+
+            int64_t seconds = mktime(&tm);
+
+            timestamp->set_seconds(seconds);
+            timestamp->set_nanos(0);
+            client_message.set_allocated_timestamp(timestamp);
+            client_message.set_username(post->username);
+            stream->Write(client_message);
+            n--;
+            if (n == 0) break;
+          }
         }
       } else  // Incase when the client sends a genuine message(not a dummy one)
       {
@@ -412,10 +396,9 @@ class SNSServiceImpl final : public SNSService::Service {
 
           for (Client *follower : follower_list) {
             string postMessage = postContent;
-            if(follower->username == client_message.username()){
+            if (follower->username == client_message.username()) {
               postMessage = postMessage + "S 0\nC 1\n\n";
-            }
-            else{
+            } else {
               postMessage = postMessage + "S 1\nC 1\n\n";
             }
             if (follower->username != client_message.username()) {
@@ -476,12 +459,11 @@ void RunServer(std::string port_no) {
       std::cout << "Registered with Coordinator Cluster No:"
                 << CoordinatorDetails.clusterId
                 << " Server:" << CoordinatorDetails.serverID << std::endl;
-                if(registerConfirmation.is_master()){
-                  cout<<"Got assigned as master server \n";
-                }
-                else{
-                  cout<<"Got assigned as backup server \n";
-                }
+      if (registerConfirmation.is_master()) {
+        cout << "Got assigned as master server \n";
+      } else {
+        cout << "Got assigned as backup server \n";
+      }
       break;
     } else {
       // Handle the error
@@ -509,7 +491,7 @@ void sendHeartbeat() {
 
     Status status =
         stub_->Heartbeat(&context, serverInfo, &heartbeatConfirmation);
-  
+
     if (status.ok() && heartbeatConfirmation.status()) {
       log(INFO, "Successfully sent heartbeat to coordinator");
       cout << "Successfully sent heartbeat to server Coordinator no: " << i
